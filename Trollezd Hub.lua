@@ -54,13 +54,27 @@ local function destroyGUI()
 	gui:Destroy()
 end
 
+-- Play sound function
+local function playSound()
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxassetid://15675059323"
+	sound.Volume = 5
+	sound.Parent = workspace
+	sound:Play()
+	game:GetService("Debris"):AddItem(sound, 5) -- auto cleanup
+end
+
 -- Load script functions
 newBtn.MouseButton1Click:Connect(function()
+	playSound()
+	print("Choosed New Version...")
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/Thyyyynn/Script-test/refs/heads/main/Trowertz%20Hub%20NewTest.lua"))()
 	destroyGUI()
 end)
 
 oldBtn.MouseButton1Click:Connect(function()
+	playSound()
+	print("Choosed Old Version...")
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/Thyyyynn/Thurr-s-Scripts/refs/heads/main/TIAPT%20Troller.lua"))()
 	destroyGUI()
 end)
