@@ -1,241 +1,139 @@
---// Server Joiner Through Job ID (Black + Purple, no UICorner, Draggable)
---// Full script, mobile-friendly dragging, CoreGui parent
-
-local Players = game:GetService("Players")
+-- HexPort Server Joiner GUI with Close Button
 local TeleportService = game:GetService("TeleportService")
-local StarterGui = game:GetService("StarterGui")
-local LocalPlayer = Players.LocalPlayer
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
 
--- Helper: notify (SetCore)
-local function notify(title, text, duration)
-	pcall(function()
-		StarterGui:SetCore("SendNotification", {
-			Title = title or "Notice",
-			Text = text or "",
-			Duration = duration or 4
-		})
-	end)
-end
+local player = Players.LocalPlayer
 
--- UI
-local gui = Instance.new("ScreenGui")
-gui.Name = "ServerJoinerByJobID"
-gui.ResetOnSpawn = false
-gui.Parent = game:GetService("CoreGui")
+-- GUI Setup
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "HexPortGUI"
 
-local frame = Instance.new("Frame")
-frame.Name = "Main"
-frame.Size = UDim2.new(0, 360, 0, 210)
-frame.Position = UDim2.new(0.5, -180, 0.4, -105)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-frame.BorderColor3 = Color3.fromRGB(150, 60, 255) -- purple outline
-frame.BorderSizePixel = 3
-frame.Active = true
-frame.Parent = gui
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 320, 0, 200)
+Frame.Position = UDim2.new(0.5, -160, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BorderColor3 = Color3.fromRGB(160, 0, 255)
+Frame.Active = true
+Frame.Draggable = true
 
--- Title bar
-local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 30)
-titleBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-titleBar.BorderColor3 = Color3.fromRGB(150, 60, 255)
-titleBar.BorderSizePixel = 0
-titleBar.Parent = frame
+-- Title
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1, -30, 0, 30)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "Server Joiner Through Job ID"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.Code
+Title.TextSize = 18
+Title.TextXAlignment = Enum.TextXAlignment.Left
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -30, 1, 0)
-title.Position = UDim2.new(0, 8, 0, 0)
-title.BackgroundTransparency = 1
-title.Text = "Server Joiner Through Job ID"
-title.TextColor3 = Color3.fromRGB(200, 170, 255)
-title.Font = Enum.Font.Code
-title.TextSize = 16
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = titleBar
+-- Close Button
+local CloseBtn = Instance.new("TextButton", Frame)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -30, 0, 0)
+CloseBtn.Text = "X"
+CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+CloseBtn.BorderColor3 = Color3.fromRGB(160, 0, 255)
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Font = Enum.Font.Code
+CloseBtn.TextSize = 18
 
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 24, 0, 24)
-closeBtn.Position = UDim2.new(1, -28, 0, 3)
-closeBtn.BackgroundColor3 = Color3.fromRGB(30, 0, 40)
-closeBtn.BorderColor3 = Color3.fromRGB(150, 60, 255)
-closeBtn.BorderSizePixel = 2
-closeBtn.Text = "X"
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.Font = Enum.Font.Code
-closeBtn.TextSize = 16
-closeBtn.Parent = titleBar
-closeBtn.MouseButton1Click:Connect(function()
-	gui:Destroy()
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
 end)
 
--- Labels & inputs
-local labelPlace = Instance.new("TextLabel")
-labelPlace.Size = UDim2.new(0, 90, 0, 26)
-labelPlace.Position = UDim2.new(0, 10, 0, 40)
-labelPlace.BackgroundTransparency = 1
-labelPlace.Text = "Place ID:"
-labelPlace.TextColor3 = Color3.fromRGB(200, 170, 255)
-labelPlace.Font = Enum.Font.Code
-labelPlace.TextSize = 16
-labelPlace.TextXAlignment = Enum.TextXAlignment.Left
-labelPlace.Parent = frame
+-- Place ID (lighter bg)
+local PlaceBox = Instance.new("TextBox", Frame)
+PlaceBox.Size = UDim2.new(1, -20, 0, 25)
+PlaceBox.Position = UDim2.new(0, 10, 0, 40)
+PlaceBox.Text = tostring(game.PlaceId)
+PlaceBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35) -- lighter shade
+PlaceBox.BorderColor3 = Color3.fromRGB(160, 0, 255)
+PlaceBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+PlaceBox.Font = Enum.Font.Code
+PlaceBox.TextSize = 16
 
-local placeBox = Instance.new("TextBox")
-placeBox.Size = UDim2.new(1, -120, 0, 28)
-placeBox.Position = UDim2.new(0, 100, 0, 38)
-placeBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-placeBox.BorderColor3 = Color3.fromRGB(150, 60, 255)
-placeBox.BorderSizePixel = 2
-placeBox.Text = tostring(game.PlaceId)
-placeBox.TextColor3 = Color3.fromRGB(220, 200, 255)
-placeBox.Font = Enum.Font.Code
-placeBox.TextSize = 16
-placeBox.ClearTextOnFocus = false
-placeBox.Parent = frame
+-- Job ID (lighter bg, blank by default)
+local JobBox = Instance.new("TextBox", Frame)
+JobBox.Size = UDim2.new(1, -20, 0, 25)
+JobBox.Position = UDim2.new(0, 10, 0, 70)
+JobBox.Text = "" -- blank
+JobBox.PlaceholderText = "Paste target JobId here"
+JobBox.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+JobBox.BorderColor3 = Color3.fromRGB(160, 0, 255)
+JobBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+JobBox.Font = Enum.Font.Code
+JobBox.TextSize = 16
 
-local labelJob = Instance.new("TextLabel")
-labelJob.Size = UDim2.new(0, 90, 0, 26)
-labelJob.Position = UDim2.new(0, 10, 0, 76)
-labelJob.BackgroundTransparency = 1
-labelJob.Text = "Job ID:"
-labelJob.TextColor3 = Color3.fromRGB(200, 170, 255)
-labelJob.Font = Enum.Font.Code
-labelJob.TextSize = 16
-labelJob.TextXAlignment = Enum.TextXAlignment.Left
-labelJob.Parent = frame
+-- Join Server Button
+local JoinBtn = Instance.new("TextButton", Frame)
+JoinBtn.Size = UDim2.new(0.48, -5, 0, 25)
+JoinBtn.Position = UDim2.new(0, 10, 0, 105)
+JoinBtn.Text = "Join Server"
+JoinBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+JoinBtn.BorderColor3 = Color3.fromRGB(160, 0, 255)
+JoinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+JoinBtn.Font = Enum.Font.Code
+JoinBtn.TextSize = 16
 
-local jobBox = Instance.new("TextBox")
-jobBox.Size = UDim2.new(1, -120, 0, 28)
-jobBox.Position = UDim2.new(0, 100, 0, 74)
-jobBox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-jobBox.BorderColor3 = Color3.fromRGB(150, 60, 255)
-jobBox.BorderSizePixel = 2
-jobBox.Text = ""
-jobBox.PlaceholderText = "Paste target JobId here"
-jobBox.TextColor3 = Color3.fromRGB(220, 200, 255)
-jobBox.Font = Enum.Font.Code
-jobBox.TextSize = 16
-jobBox.ClearTextOnFocus = false
-jobBox.Parent = frame
+-- Fill IDs Button
+local FillBtn = Instance.new("TextButton", Frame)
+FillBtn.Size = UDim2.new(0.48, -5, 0, 25)
+FillBtn.Position = UDim2.new(0.52, 0, 0, 105)
+FillBtn.Text = "Fill Current IDs"
+FillBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+FillBtn.BorderColor3 = Color3.fromRGB(160, 0, 255)
+FillBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FillBtn.Font = Enum.Font.Code
+FillBtn.TextSize = 16
 
--- Buttons
-local joinBtn = Instance.new("TextButton")
-joinBtn.Size = UDim2.new(0.5, -15, 0, 34)
-joinBtn.Position = UDim2.new(0, 10, 0, 114)
-joinBtn.BackgroundColor3 = Color3.fromRGB(25, 0, 40)
-joinBtn.BorderColor3 = Color3.fromRGB(150, 60, 255)
-joinBtn.BorderSizePixel = 2
-joinBtn.Text = "Join Server"
-joinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-joinBtn.Font = Enum.Font.Code
-joinBtn.TextSize = 16
-joinBtn.Parent = frame
+-- Copy JobId Button
+local CopyBtn = Instance.new("TextButton", Frame)
+CopyBtn.Size = UDim2.new(1, -20, 0, 25)
+CopyBtn.Position = UDim2.new(0, 10, 0, 135)
+CopyBtn.Text = "Copy My JobId"
+CopyBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+CopyBtn.BorderColor3 = Color3.fromRGB(160, 0, 255)
+CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CopyBtn.Font = Enum.Font.Code
+CopyBtn.TextSize = 16
 
-local myIdsBtn = Instance.new("TextButton")
-myIdsBtn.Size = UDim2.new(0.5, -15, 0, 34)
-myIdsBtn.Position = UDim2.new(0.5, 5, 0, 114)
-myIdsBtn.BackgroundColor3 = Color3.fromRGB(25, 0, 40)
-myIdsBtn.BorderColor3 = Color3.fromRGB(150, 60, 255)
-myIdsBtn.BorderSizePixel = 2
-myIdsBtn.Text = "Fill Current IDs"
-myIdsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-myIdsBtn.Font = Enum.Font.Code
-myIdsBtn.TextSize = 16
-myIdsBtn.Parent = frame
+-- Join New Server Button
+local NewServerBtn = Instance.new("TextButton", Frame)
+NewServerBtn.Size = UDim2.new(1, -20, 0, 25)
+NewServerBtn.Position = UDim2.new(0, 10, 0, 165)
+NewServerBtn.Text = "Join New Server"
+NewServerBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+NewServerBtn.BorderColor3 = Color3.fromRGB(160, 0, 255)
+NewServerBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+NewServerBtn.Font = Enum.Font.Code
+NewServerBtn.TextSize = 16
 
-local copyJobBtn = Instance.new("TextButton")
-copyJobBtn.Size = UDim2.new(1, -20, 0, 30)
-copyJobBtn.Position = UDim2.new(0, 10, 0, 154)
-copyJobBtn.BackgroundColor3 = Color3.fromRGB(25, 0, 40)
-copyJobBtn.BorderColor3 = Color3.fromRGB(150, 60, 255)
-copyJobBtn.BorderSizePixel = 2
-copyJobBtn.Text = "Copy My JobId"
-copyJobBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-copyJobBtn.Font = Enum.Font.Code
-copyJobBtn.TextSize = 16
-copyJobBtn.Parent = frame
-
--- Actions
-myIdsBtn.MouseButton1Click:Connect(function()
-	placeBox.Text = tostring(game.PlaceId)
-	jobBox.Text = tostring(game.JobId or "")
-	notify("Server Joiner", "Filled with your current PlaceId & JobId.", 3)
+-- Functions
+JoinBtn.MouseButton1Click:Connect(function()
+    if tonumber(PlaceBox.Text) and JobBox.Text ~= "" then
+        TeleportService:TeleportToPlaceInstance(tonumber(PlaceBox.Text), JobBox.Text, player)
+    end
 end)
 
-copyJobBtn.MouseButton1Click:Connect(function()
-	local jid = tostring(game.JobId or "")
-	if jid == "" then
-		notify("Copy JobId", "No JobId found in this environment.", 3)
-		return
-	end
-	local ok = pcall(setclipboard, jid)
-	if ok then
-		notify("Copy JobId", "Copied JobId to clipboard.", 3)
-	else
-		notify("Copy JobId", "Clipboard not available on this executor.", 3)
-	end
+FillBtn.MouseButton1Click:Connect(function()
+    PlaceBox.Text = tostring(game.PlaceId)
+    JobBox.Text = game.JobId
 end)
 
-joinBtn.MouseButton1Click:Connect(function()
-	local placeIdNum = tonumber(placeBox.Text)
-	local jobIdStr = tostring(jobBox.Text or ""):gsub("%s+", "")
-
-	if not placeIdNum then
-		notify("Join Failed", "Invalid PlaceId.", 4)
-		return
-	end
-	if jobIdStr == "" or #jobIdStr < 8 then
-		notify("Join Failed", "Invalid JobId.", 4)
-		return
-	end
-
-	notify("Teleporting...", "Attempting to join target server…", 3)
-	local ok, err = pcall(function()
-		TeleportService:TeleportToPlaceInstance(placeIdNum, jobIdStr, LocalPlayer)
-	end)
-	if not ok then
-		notify("Teleport Error", tostring(err), 6)
-	end
+CopyBtn.MouseButton1Click:Connect(function()
+    setclipboard(game.JobId)
 end)
 
--- Mobile-friendly dragging (manual)
-do
-	local UIS = game:GetService("UserInputService")
-	local dragging = false
-	local dragInput, dragStart, startPos
-
-	local function update(input)
-		local delta = input.Position - dragStart
-		frame.Position = UDim2.new(
-			startPos.X.Scale, startPos.X.Offset + delta.X,
-			startPos.Y.Scale, startPos.Y.Offset + delta.Y
-		)
-	end
-
-	titleBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = frame.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
-	end)
-
-	titleBar.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			dragInput = input
-		end
-	end)
-
-	UIS.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			update(input)
-		end
-	end)
-end
-
--- Initial heads-up
-notify("Server Joiner", "Enter JobId (and PlaceId if needed), then press Join.", 5)
+NewServerBtn.MouseButton1Click:Connect(function()
+    local servers = HttpService:JSONDecode(game:HttpGetAsync(
+        "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+    ))
+    for _, s in pairs(servers.data) do
+        if s.playing < s.maxPlayers then
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, player)
+            break
+        end
+    end
+end)
